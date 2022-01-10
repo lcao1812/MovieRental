@@ -1,0 +1,88 @@
+is_global = true
+build_property.TargetFramework = net6.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = MovieRentalCRUD
+build_property.RootNamespace = MovieRentalCRUD
+build_property.ProjectDir = C:\Users\locdc\Documents\EAI\MovieRental\MovieRentalCRUDSln\MovieRentalCRUD\
+build_property.RazorLangVersion = 6.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\locdc\Documents\EAI\MovieRental\MovieRentalCRUDSln\MovieRentalCRUD
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/Counter.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/FetchData.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmV0Y2hEYXRhLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/MovieCreate.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTW92aWVDcmVhdGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/MovieEdit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTW92aWVFZGl0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/MovieIndex.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTW92aWVJbmRleC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/UserCreate.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlckNyZWF0ZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/UserEdit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlckVkaXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/UserEditRental.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlckVkaXRSZW50YWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/UserIndex.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlckluZGV4LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Shared/SurveyPrompt.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFN1cnZleVByb21wdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-qp3b33jtjc
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-9zugrrdi7k
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0xheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 

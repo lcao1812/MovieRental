@@ -1,0 +1,59 @@
+﻿@page "/create/movie"
+
+
+<h1> Creating Movie @_movieToCreate.MovieName</h1>
+
+<EditForm Model="_movieToCreate" OnValidSubmit="CreateMovieAsync">
+    <div class="form-group mb-3">
+        <label for="movieName">Title</label>
+        <InputText class="form-control" id="movieName" placeholder="Enter Movie Name" @bind-Value="_movieToCreate.MovieName"></InputText>
+    </div>
+    
+    <div class="form-group mb-3">
+        <label for="movieSummary">Synopsis</label>
+        <InputText class="form-control" id="movieSummary" placeholder="Enter Movie Synopsis" @bind-Value="_movieToCreate.MovieSummary"></InputText>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="movieStock">Stock</label>
+        <InputNumber class="form-control" id="movieStock" placeholder="Enter Movie Synopsis" @bind-Value="_movieToCreate.MovieStock"></InputNumber>
+    </div>
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <button class="btn btn-success" type="submit">Submit</button>
+    <button class="btn btn-danger" @onclick="navigateRoot">Cancel</button>
+</EditForm>
+
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+@code {
+    private Movie _movieToCreate = new Movie
+        {
+            MovieName = "",
+            MovieSummary = ""
+        };
+
+    private async Task CreateMovieAsync()
+    {
+        using var context = new MovieRentalDBContext();
+        await context.Movies.AddAsync(_movieToCreate);
+
+        if (await context.SaveChangesAsync() > 0)
+        {
+            NavigationManager.NavigateTo("/movies");
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to create the movie \"{_movieToCreate.MovieName}\"";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+    }
+
+    private void navigateRoot()
+    {
+        NavigationManager.NavigateTo("/movies");
+    }
+}

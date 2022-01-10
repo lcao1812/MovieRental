@@ -1,0 +1,79 @@
+﻿@page "/edit/user/{UserId:int}/movies"
+
+<h3>Add rentals</h3>
+<table class="table table-responsive table-striped">
+    <thead>
+        <tr>
+            <th scope="col">Movie ID</th>
+            <th scope="col">Movie Name</th>
+            <th scope="col">Movie Synopsis</th>
+            <th scope="col">Stock</th>
+            <th scope="col">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (_movies != null)
+        {
+            foreach (var movie in _movies)
+            {
+                <tr>
+                    <td>@movie.MovieId</td>
+                    <td>@movie.MovieName</td>
+                    <td>@movie.MovieSummary</td>
+                    <td>@movie.MovieStock</td>
+                    <td>
+                        @*The button to trigger the renting. Disabled if the stock reaches 0*@
+                        <button @onclick="() => RentMovie(movie)" class="btn btn-lg btn-warning @(movie.MovieStock == 0 ? "disabled" : "")">Rent</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+<a href="/edit/user/@UserId" class="btn btn-danger btn-lg">Cancel</a>
+
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter] public int UserId { get; set; }
+    private List<Movie> _movies = null;
+    private Movie _movieToRent = null;
+    private User _currentUser = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = new MovieRentalDBContext();
+
+        _movies = await context.Movies.ToListAsync();
+        _currentUser = await context.Users.FindAsync(UserId);
+    }
+
+    private async void RentMovie(Movie movieToRent)
+    {
+        using var context = new MovieRentalDBContext();
+
+        _movieToRent = await context.Movies.FindAsync(movieToRent.MovieId);
+        _movieToRent.MovieStock -= 1;
+        _currentUser.MovieUser.Add(new Movie_User
+        {
+            UserId = _currentUser.UserId,
+            User = _currentUser,
+            MovieId = _movieToRent.MovieId,
+            Movie = _movieToRent,
+        });
+        
+        context.Movies.Update(_movieToRent);
+        context.Users.Update(_currentUser);
+
+        if (await context.SaveChangesAsync() > 0)
+        {
+            NavigationManager.NavigateTo($"/edit/user/{UserId}");
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to edit the movie \"{_movieToRent.MovieName}\"";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+    }
+}

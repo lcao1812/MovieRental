@@ -1,0 +1,65 @@
+﻿@page "/movies"
+
+<PageTitle>All Movies</PageTitle>
+
+<h1>Movies</h1> 
+<a href="/create/movie" class="btn btn-success btn-lg">Create New Entry</a>
+
+<table class="table table-responsive table-striped">
+    <thead>
+        <tr>
+            <th scope="col">Movie ID</th>
+            <th scope="col">Movie Name</th>
+            <th scope="col">Movie Synopsis</th>
+            <th scope="col">Stock</th>
+            <th scope="col">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (_movies != null)
+        {
+            foreach (var movie in _movies)
+            {
+                <tr>
+                    <td>@movie.MovieId</td>
+                    <td>@movie.MovieName</td>
+                    <td>@movie.MovieSummary</td>
+                    <td>@movie.MovieStock</td>
+                    <td>
+                        <a href="/edit/movie/@movie.MovieId" class="btn btn-warning w-50 my-2">Update</a>
+                        <button @onclick="() => DeleteMovieEntry(movie)" class="btn btn-danger w-50 my-2">Delete</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@inject IJSRuntime JSRuntime
+@code {
+    private List<Movie> _movies = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = new MovieRentalDBContext();
+
+        _movies = await context.Movies.ToListAsync();
+    }
+
+
+    private async Task DeleteMovieEntry(Movie movieToDelete)
+    {
+        using var context = new MovieRentalDBContext();
+        context.Movies.Remove(movieToDelete);
+
+        if (await context.SaveChangesAsync() > 0)
+        {
+            _movies.Remove(movieToDelete);
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to delete the movie \"{movieToDelete.MovieName}\"";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+    }
+}

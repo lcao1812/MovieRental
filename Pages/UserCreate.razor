@@ -1,0 +1,49 @@
+﻿@page "/create/user"
+
+
+<h1> Creating User @_userToCreate.UserName</h1>
+
+<EditForm Model="_userToCreate" OnValidSubmit="CreateUserAsync">
+    <div class="form-group mb-3">
+        <label for="userName">Title</label>
+        <InputText class="form-control" id="userName" placeholder="Enter User Name" @bind-Value="_userToCreate.UserName"></InputText>
+    </div>
+    
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <button class="btn btn-success" type="submit">Submit</button>
+    <button class="btn btn-danger" @onclick="navigateRoot">Cancel</button>
+</EditForm>
+
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+@code {
+    private User _userToCreate = new User
+        {
+            UserName = "",
+        };
+
+    private async Task CreateUserAsync()
+    {
+        using var context = new MovieRentalDBContext();
+        await context.Users.AddAsync(_userToCreate);
+
+        if (await context.SaveChangesAsync() > 0)
+        {
+            NavigationManager.NavigateTo("/users");
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to create the user \"{_userToCreate.UserName}\"";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+    }
+
+    private void navigateRoot()
+    {
+        NavigationManager.NavigateTo("/users");
+    }
+}

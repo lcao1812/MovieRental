@@ -1,0 +1,65 @@
+﻿@page "/edit/movie/{MovieId:int}"
+
+
+<h1> Editing Movie @_movieToEdit.MovieName</h1>
+
+<EditForm Model="_movieToEdit" OnValidSubmit="EditMovieAsync">
+    <div class="form-group mb-3">
+        <label for="movieName">Title</label>
+        <InputText class="form-control" id="movieName" placeholder="Enter Movie Name" @bind-Value="_movieToEdit.MovieName"></InputText>
+    </div>
+    
+    <div class="form-group mb-3">
+        <label for="movieSummary">Synopsis</label>
+        <InputText class="form-control" id="movieSummary" placeholder="Enter Movie Synopsis" @bind-Value="_movieToEdit.MovieSummary"></InputText>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="movieStock">Stock</label>
+        <InputNumber class="form-control" id="movieStock" placeholder="Enter Movie Synopsis" @bind-Value="_movieToEdit.MovieStock"></InputNumber>
+    </div>
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <button class="btn btn-success" type="submit">Submit</button>
+    <button class="btn btn-danger" @onclick="navigateRoot">Cancel</button>
+</EditForm>
+
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter] public int MovieId { get; set; }
+
+    private Movie _movieToEdit = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        using var context = new MovieRentalDBContext();    
+        _movieToEdit = await context.Movies.FindAsync(MovieId);
+        
+    }
+
+    private async Task EditMovieAsync()
+    {
+        using var context = new MovieRentalDBContext();
+        context.Movies.Update(_movieToEdit);
+
+        if (await context.SaveChangesAsync() > 0)
+        {
+            NavigationManager.NavigateTo("/movies");
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to edit the movie \"{_movieToEdit.MovieName}\"";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+    }
+
+    // Helper to navigate back to the root respective of the current page
+    private void navigateRoot()
+    {
+        NavigationManager.NavigateTo("/movies");
+    }
+}

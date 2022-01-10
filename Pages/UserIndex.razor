@@ -1,0 +1,64 @@
+﻿@page "/users"
+
+<PageTitle>All Users</PageTitle>
+
+<h1>Users</h1> 
+<a href="/create/user" class="btn btn-success btn-lg">Create New Entry</a>
+
+<table class="table table-responsive table-striped">
+    <thead>
+        <tr>
+            <th scope="col">User ID</th>
+            <th scope="col">User Name</th>
+            <th scope="col">Action</th>
+            
+        </tr>
+    </thead>
+    <tbody>
+        @if (_users != null)
+        {
+            foreach (var user in _users)
+            {
+                <tr>
+                    <td>@user.UserId</td>
+                    <td>@user.UserName</td>
+                    <td>
+                        <a href="/edit/user/@user.UserId" class="btn btn-warning w-50 my-2">Update</a>
+                        <button @onclick="() => DeleteUserEntry(user)" class="btn btn-danger w-50 my-2">Delete</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@inject IJSRuntime JSRuntime
+@code {
+    private List<User> _users = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = new MovieRentalDBContext();
+
+        _users = await context.Users.ToListAsync();
+    }
+
+
+    private async Task DeleteUserEntry(User userToDelete)
+    {
+        using var context = new MovieRentalDBContext();
+        context.Users.Remove(userToDelete);
+
+        if (await context.SaveChangesAsync() > 0)
+        {
+            _users.Remove(userToDelete);
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to delete the movie \"{userToDelete.UserName}\"";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+    }
+
+    // TODO: Return all rentals before deleting.
+}

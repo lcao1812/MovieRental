@@ -1,0 +1,125 @@
+﻿@page "/edit/user/{UserId:int}"
+
+
+<h1> Editing User @_userToEdit.UserName</h1>
+
+<EditForm Model="_userToEdit" OnValidSubmit="EditUserAsync">
+    <div class="form-group mb-3">
+        <label for="userName">Title</label>
+        <InputText class="form-control" id="userName" placeholder="Enter User Name" @bind-Value="_userToEdit.UserName"></InputText>
+    </div>
+
+
+    
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <button class="btn btn-success" type="submit">Submit</button>
+    <button class="btn btn-danger" @onclick="navigateRoot">Cancel</button>
+</EditForm>
+
+<div class="my-4">
+    <h3>Renting</h3>
+    <a href="/edit/user/@UserId/movies" class="btn btn-info btn-lg">Add movies</a>
+    <table class="table table-responsive table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Action</th> 
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var movie_user in _moviesRenting)
+            {
+                <tr>
+                    <td>@fetchMovieName(movie_user.MovieId)</td>
+                    <td><button class="btn btn-md btn-warning" @onclick="() => returnRental(movie_user)">Return</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter] public int UserId { get; set; }
+
+    private User _userToEdit = null;
+    private List<Movie_User> _moviesRenting = new List<Movie_User>();
+    private Movie movieRenting = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        using var context = new MovieRentalDBContext();    
+        _userToEdit = await context.Users.FindAsync(UserId);
+        _moviesRenting = await (
+            from movie_user in context.Movie_User
+            where (movie_user.UserId == UserId)
+            select movie_user
+        ).ToListAsync();
+
+    }
+
+    private async Task EditUserAsync()
+    {
+        using var context = new MovieRentalDBContext();
+        context.Users.Update(_userToEdit);
+
+        if (await context.SaveChangesAsync() > 0)
+        {
+            NavigationManager.NavigateTo("/users");
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to edit the user \"{_userToEdit.UserName}\"";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+    }
+
+    // Helper to navigate back to the root respective of the current page
+    private void navigateRoot()
+    {
+        NavigationManager.NavigateTo("/users");
+    }
+
+    // For some reason I could not retrieve the movie name from the join table
+    // therefore I had to use the movie id (foreign key) to retrieve it from the movie table
+    // input --> movieId: int
+    // outptu --> MovieName: string
+    private string fetchMovieName(int movieId)
+    {
+        using var context = new MovieRentalDBContext();
+        movieRenting = context.Movies.Find(movieId);
+        return movieRenting.MovieName;
+    }
+
+    // Helper to return the movie rental
+    // This function increases the movie stock, remove the entry from the joined table
+    // Lastly, it removes the entry from the list to display the movies, or display error message
+    // input: Movie_User --> join table entry
+    // output: void --> display the list or error message.
+    private async void returnRental(Movie_User movie_user)
+    {
+        // Grabbing the movie from the Movie table and increase the stock
+        using var context = new MovieRentalDBContext();
+        movieRenting = await context.Movies.FindAsync(movie_user.MovieId);
+        movieRenting.MovieStock += 1;
+
+        // Using a different context to avoid same key tracking error
+        using var context_1 = new MovieRentalDBContext();
+        context_1.Movie_User.Remove(movie_user);
+
+        if (await context.SaveChangesAsync() > 0 && await context_1.SaveChangesAsync() > 0)
+        {
+            _moviesRenting.Remove(movie_user);
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to return the movie \"{movieRenting.MovieName}\"";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+    }
+}
