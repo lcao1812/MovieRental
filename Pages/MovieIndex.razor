@@ -4,14 +4,24 @@
 
 <h1>Movies</h1> 
 <a href="/create/movie" class="btn btn-success btn-lg">Create New Entry</a>
+<div class="row">
+    <div class="col">
+        <input class="form-control mt-3" placeholder="Search For Movies by Name" @onchange="UpdateMovieListByName">
+    </div>
+    
+    <div class="col">
+        <input class="form-control mt-3" placeholder="Search For Movies Released After Year" @onchange="UpdateMovieListByYear">
+    </div>
+</div>
 
 <table class="table table-responsive table-striped">
     <thead>
         <tr>
-            <th scope="col">Movie ID</th>
             <th scope="col">Movie Name</th>
             <th scope="col">Movie Synopsis</th>
+            <th scope="col">Year Released</th>
             <th scope="col">Stock</th>
+            <th scope="col">Price</th>
             <th scope="col">Action</th>
         </tr>
     </thead>
@@ -21,13 +31,14 @@
             foreach (var movie in _movies)
             {
                 <tr>
-                    <td>@movie.MovieId</td>
-                    <td>@movie.MovieName</td>
-                    <td>@movie.MovieSummary</td>
-                    <td>@movie.MovieStock</td>
+                    <th>@movie.MovieName</th>
+                    <td>@movie.MovieSummary.Substring(0, 200)...</td>
+                    <td>@movie.MovieYear</td>
+                    <td>@this.GetMovieStock(movie.MovieId)</td>
+                    <td>$@(movie.MovieYear <= 2010 ? 5 : 10)</td>
                     <td>
-                        <a href="/edit/movie/@movie.MovieId" class="btn btn-warning w-50 my-2">Update</a>
-                        <button @onclick="() => DeleteMovieEntry(movie)" class="btn btn-danger w-50 my-2">Delete</button>
+                        <a href="/edit/movie/@movie.MovieId" class="btn btn-warning w-100 my-2">Update</a>
+                        <button @onclick="() => DeleteMovieEntry(movie)" class="btn btn-danger w-100 my-2">Delete</button>
                     </td>
                 </tr>
             }
@@ -61,5 +72,49 @@
             string errorMessage = $"ERROR: Failed to delete the movie \"{movieToDelete.MovieName}\"";
             await JSRuntime.InvokeVoidAsync("alert", errorMessage);
         }
+    }
+
+    private int GetMovieStock(Guid movieGuid)
+    {
+        int stock = 0;
+        List<MovieCopy> _copies = null;
+
+        using var context = new MovieRentalDBContext();
+        _copies = (
+            from movieCopy in context.MoviesCopy
+            where (movieCopy.MovieId.Equals(movieGuid) && movieCopy.UserId == null)
+            select movieCopy
+        ).ToList();
+
+        stock = _copies.Count();
+
+        return stock;
+    }
+
+    private async void UpdateMovieListByName(ChangeEventArgs e)
+    {
+        string searchQuery = e.Value.ToString().ToLower();
+
+        using var context = new MovieRentalDBContext();
+        _movies = await (
+            from movie in context.Movies
+            where (movie.MovieName.ToLower().Contains(searchQuery))
+            select(movie)
+        ).ToListAsync();
+
+        StateHasChanged();
+    }
+    
+    private async void UpdateMovieListByYear(ChangeEventArgs e)
+    {
+        int searchQuery = e.Value.ToString() == "" ? 0 : int.Parse(e.Value.ToString());
+        using var context = new MovieRentalDBContext();
+        _movies = await (
+            from movie in context.Movies
+            where (movie.MovieYear >= searchQuery)
+            select(movie)
+        ).ToListAsync();
+
+        StateHasChanged();
     }
 }

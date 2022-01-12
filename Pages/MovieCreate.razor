@@ -11,12 +11,17 @@
     
     <div class="form-group mb-3">
         <label for="movieSummary">Synopsis</label>
-        <InputText class="form-control" id="movieSummary" placeholder="Enter Movie Synopsis" @bind-Value="_movieToCreate.MovieSummary"></InputText>
+        <textarea rows="4" class="form-control" id="movieSummary" placeholder="Enter Movie Synopsis" @bind-value:event="onchange" @bind-value="_movieToCreate.MovieSummary"></textarea>
     </div>
 
     <div class="form-group mb-3">
+        <label for="movieYear">Year Released</label>
+        <InputNumber class="form-control" id="movieYear" placeholder="Enter Movie Synopsis" @bind-Value="_movieToCreate.MovieYear"></InputNumber>
+    </div>
+    
+    <div class="form-group mb-3">
         <label for="movieStock">Stock</label>
-        <InputNumber class="form-control" id="movieStock" placeholder="Enter Movie Synopsis" @bind-Value="_movieToCreate.MovieStock"></InputNumber>
+        <InputNumber class="form-control" id="movieStock" placeholder="Enter Movie Synopsis" @bind-Value="_movieStock"></InputNumber>
     </div>
 
     <DataAnnotationsValidator />
@@ -33,8 +38,12 @@
     private Movie _movieToCreate = new Movie
         {
             MovieName = "",
-            MovieSummary = ""
+            MovieSummary = "",
+            MovieYear = DateTime.Now.Year
         };
+    private int _movieStock = 0;
+    private MovieCopy _copyToCreate = null;
+
 
     private async Task CreateMovieAsync()
     {
@@ -43,7 +52,27 @@
 
         if (await context.SaveChangesAsync() > 0)
         {
-            NavigationManager.NavigateTo("/movies");
+            for (int i=0; i<this._movieStock; i++)
+            {
+                _copyToCreate = new MovieCopy
+                    {
+                        MovieId = _movieToCreate.MovieId,
+                        Movie = _movieToCreate,
+
+                    };
+                await context.MoviesCopy.AddAsync(_copyToCreate);
+            }
+
+            if (await context.SaveChangesAsync() > 0)
+            {
+                this.navigateRoot();
+            }
+            else
+            {
+                string errorMessage = $"ERROR: Failed to create the movie \"{_movieToCreate.MovieName}\"";
+                await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+            }
+
         }
         else
         {

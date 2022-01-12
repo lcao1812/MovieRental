@@ -1,9 +1,9 @@
-﻿@page "/edit/movie/{MovieId:int}"
+﻿@page "/edit/movie/{MovieId:guid}"
 
 
 <h1> Editing Movie @_movieToEdit.MovieName</h1>
 
-<EditForm Model="_movieToEdit" OnValidSubmit="EditMovieAsync">
+<EditForm Model="_movieToEdit" OnValidSubmit="EditMovieAsync" class="mb-5">
     <div class="form-group mb-3">
         <label for="movieName">Title</label>
         <InputText class="form-control" id="movieName" placeholder="Enter Movie Name" @bind-Value="_movieToEdit.MovieName"></InputText>
@@ -11,12 +11,16 @@
     
     <div class="form-group mb-3">
         <label for="movieSummary">Synopsis</label>
-        <InputText class="form-control" id="movieSummary" placeholder="Enter Movie Synopsis" @bind-Value="_movieToEdit.MovieSummary"></InputText>
+        <textarea rows="4" class="form-control" id="movieSummary" placeholder="Enter Movie Synopsis" @bind-value:event="onchange" @bind-value="_movieToEdit.MovieSummary"></textarea>
     </div>
 
     <div class="form-group mb-3">
-        <label for="movieStock">Stock</label>
-        <InputNumber class="form-control" id="movieStock" placeholder="Enter Movie Synopsis" @bind-Value="_movieToEdit.MovieStock"></InputNumber>
+        <label for="movieYear">Year Released</label>
+        <InputNumber class="form-control" id="movieYear" placeholder="Enter Movie Synopsis" @bind-Value="_movieToEdit.MovieYear"></InputNumber>
+    </div>
+    <div class="form-group mb-3">
+        <label for="movieStock">Available Stock</label>
+        <InputNumber class="form-control" id="movieStock" placeholder="Enter Movie Synopsis" @bind-Value="_totalStock"></InputNumber>
     </div>
 
     <DataAnnotationsValidator />
@@ -24,21 +28,28 @@
 
     <button class="btn btn-success" type="submit">Submit</button>
     <button class="btn btn-danger" @onclick="navigateRoot">Cancel</button>
+    <button class="btn btn-warning" @onclick="() => UpdateMovieStock(_movieToEdit)">Update Stock</button>
 </EditForm>
+
+<MovieStock MovieId=@MovieId/>
+
 
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
 @code {
-    [Parameter] public int MovieId { get; set; }
+    [Parameter] public Guid MovieId { get; set; }
 
     private Movie _movieToEdit = null;
-
+    private int _movieStock = 0;
+    private int _stockToAdd = 0;
+    private int _totalStock = 0;
     protected override async Task OnParametersSetAsync()
     {
         using var context = new MovieRentalDBContext();    
         _movieToEdit = await context.Movies.FindAsync(MovieId);
-        
+        _movieStock = this.GetMovieStock(_movieToEdit.MovieId);
+        _totalStock = _movieStock;
     }
 
     private async Task EditMovieAsync()
@@ -55,6 +66,80 @@
             string errorMessage = $"ERROR: Failed to edit the movie \"{_movieToEdit.MovieName}\"";
             await JSRuntime.InvokeVoidAsync("alert", errorMessage);
         }
+    }
+
+    private int GetMovieStock(Guid movieGuid)
+    {
+        int stock = 0;
+        List<MovieCopy> _copies = null;
+
+        using var context = new MovieRentalDBContext();
+        _copies = (
+            from movieCopy in context.MoviesCopy
+            where (movieCopy.MovieId.Equals(movieGuid) && movieCopy.UserId == null)
+            select movieCopy
+        ).ToList();
+
+        stock = _copies.Count();
+
+        return stock;
+    }
+
+    private async void UpdateMovieStock(Movie movieToEdit)
+    {
+        if (_totalStock >= 0)
+        {   // can only update if the total stock after update is valid       
+            _stockToAdd = _totalStock - _movieStock;
+            MovieCopy _copyToCreate = null;
+            List<MovieCopy> _copiesToRemove = null;
+
+            using var context = new MovieRentalDBContext();
+
+            if (_stockToAdd >= 0)
+            {   // when the stock to add is positive       
+                for (int i=0; i<_stockToAdd; i++)
+                {
+                    _copyToCreate = new MovieCopy();
+                    _copyToCreate.MovieId = movieToEdit.MovieId;
+
+                    context.MoviesCopy.AddAsync(_copyToCreate);
+
+                    if (await context.SaveChangesAsync() <= 0) // failed to update
+                    {
+                        string errorMessage = $"ERROR: Failed to edit the movie \"{_movieToEdit.MovieName}\"";
+                        await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+                    }
+                }
+            }
+            else
+            {   // when the stock to add is negative, meaning we must delete some stock
+
+                // get the list of copies that can be removed.
+                _copiesToRemove = await (
+                        from movieCopy in context.MoviesCopy
+                        where (movieCopy.MovieId == movieToEdit.MovieId && movieCopy.UserId == null)
+                        select movieCopy
+                    ).ToListAsync();
+
+                for (int i=0; i< 0 - _stockToAdd; i++)
+                {
+                    // remove all the needed stock
+                    context.MoviesCopy.Remove(_copiesToRemove.ElementAt(i));
+
+                }
+                if (await context.SaveChangesAsync() <= 0) // failed to update
+                {
+                    string errorMessage = $"ERROR: Failed to edit the movie \"{_movieToEdit.MovieName}\"";
+                    await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+                }
+            }
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to edit the movie \"{_movieToEdit.MovieName}\" --> Stock must be positive";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+
     }
 
     // Helper to navigate back to the root respective of the current page

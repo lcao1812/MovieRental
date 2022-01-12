@@ -1,15 +1,16 @@
 ﻿@page "/users"
 
-<PageTitle>All Users</PageTitle>
+<PageTitle>All Clients</PageTitle>
 
-<h1>Users</h1> 
+<h1>Clients</h1> 
 <a href="/create/user" class="btn btn-success btn-lg">Create New Entry</a>
 
 <table class="table table-responsive table-striped">
     <thead>
         <tr>
-            <th scope="col">User ID</th>
-            <th scope="col">User Name</th>
+            <th scope="col">Client Name</th>
+            <th scope="col"># Movies Renting</th>
+            <th scope="col">Date Joined</th>
             <th scope="col">Action</th>
             
         </tr>
@@ -20,11 +21,12 @@
             foreach (var user in _users)
             {
                 <tr>
-                    <td>@user.UserId</td>
                     <td>@user.UserName</td>
+                    <td>@GetNumberMoviesRenting(user.UserId)</td>
+                    <td>@user.JoinDate</td>
                     <td>
-                        <a href="/edit/user/@user.UserId" class="btn btn-warning w-50 my-2">Update</a>
-                        <button @onclick="() => DeleteUserEntry(user)" class="btn btn-danger w-50 my-2">Delete</button>
+                        <a href="/edit/user/@user.UserId" class="btn btn-warning w-100 my-2">Update</a>
+                        <button @onclick="() => DeleteUserEntry(user)" class="btn btn-danger w-100 my-2">Delete</button>
                     </td>
                 </tr>
             }
@@ -46,6 +48,7 @@
 
     private async Task DeleteUserEntry(User userToDelete)
     {
+        ReturnAllRental(userToDelete.UserId);
         using var context = new MovieRentalDBContext();
         context.Users.Remove(userToDelete);
 
@@ -60,5 +63,45 @@
         }
     }
 
+    private int GetNumberMoviesRenting(Guid UserId)
+    {
+        int numberOfCopies = 0;
+
+        using var context = new MovieRentalDBContext();
+        numberOfCopies = (
+            from movieCopy in context.MoviesCopy
+            where (movieCopy.UserId == UserId)
+            select movieCopy
+        ).ToList().Count();
+
+        return numberOfCopies;
+    }
+
     // TODO: Return all rentals before deleting.
+    private async Task ReturnAllRental(Guid UserId)
+    {
+        List<MovieCopy> copiesInPossession = null;
+        MovieCopy copyToReturn = null;
+        using var context = new MovieRentalDBContext();
+        // get all copies that the user is renting.
+        copiesInPossession = await (
+            from movieCopy in context.MoviesCopy
+            where (movieCopy.UserId == UserId)
+            select movieCopy
+        ).ToListAsync();
+
+        foreach(var copy in copiesInPossession)
+        {
+            using var context_1 = new MovieRentalDBContext();
+            copyToReturn = await context.MoviesCopy.FindAsync(copy.CopyId);
+            copyToReturn.DateRent = null;
+            copyToReturn.UserId = null;
+
+            if (await context.SaveChangesAsync() < 0)
+            {
+                string errorMessage = $"ERROR: Failed to delete the user";
+                await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+            }
+        }
+    }
 }

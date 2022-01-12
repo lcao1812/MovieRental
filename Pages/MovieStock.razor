@@ -1,0 +1,57 @@
+﻿<h3>Movie Stock</h3>
+
+<table class="table table-responsive table-striped">
+    <thead>
+        <tr>
+            <th scope="col">Count</th>
+            <th scope="col">Copy ID</th>
+            <th scope="col">Client Renting ID</th>
+            <th scope="col">Client Renting Name</th>
+            <th scope="col">Rent Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var copy in _copies)
+        {
+            <tr>
+                <td>@(stockCount+=1)</td>
+                <td>@copy.CopyId</td>
+                <td>@(copy.UserId == null ? "None" : copy.UserId.ToString())</td>
+                <td>@getUserName(copy.UserId)</td>
+                <td>@(copy.DateRent == null ? "In Stock" : copy.DateRent)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public Guid MovieId { get; set; }
+    private List<MovieCopy> _copies = null;
+    private int stockCount = 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        using var context = new MovieRentalDBContext();
+        _copies = await (
+            from movieCopy in context.MoviesCopy
+            where (movieCopy.MovieId == MovieId)
+            select movieCopy
+        ).ToListAsync();
+
+    }
+
+    private string getUserName(Guid? UserId)
+    {
+        if (UserId == null)
+        {
+            return "None";
+        }
+        else
+        {
+            using var context = new MovieRentalDBContext();
+            User currentUser = context.Users.Find(UserId);
+            return currentUser.UserName;
+        }
+    }
+}

@@ -6,7 +6,7 @@ internal sealed class MovieRentalDBContext : DbContext
 {
     public DbSet<Movie>? Movies { get; set;}
     public DbSet<User>? Users { get; set;}
-    public DbSet<Movie_User>? Movie_User { get; set;}
+    public DbSet<MovieCopy>? MoviesCopy { get; set;}
 
     protected override void OnConfiguring(DbContextOptionsBuilder dbContextOptionsBuilder) 
     {
@@ -19,15 +19,19 @@ internal sealed class MovieRentalDBContext : DbContext
         modelBuilder.Entity<User>().HasData(SeedUser(10));
 */
         // set up the many to many relationship between the movies and the user
-        modelBuilder.Entity<Movie_User>()
-            .HasOne(m => m.Movie)
-            .WithMany(m => m.MovieUser)
-            .HasForeignKey(m => m.MovieId);
+        // the relationship is a one to many from movie to movieCopy
+        // the relationship is a one to many from user to movieCopy
+        
+        modelBuilder.Entity<MovieCopy>()
+            .HasOne(c => c.Movie)
+            .WithMany(m => m.MovieCopies)
+            .HasForeignKey(c => c.MovieId);
 
-        modelBuilder.Entity<Movie_User>()
-            .HasOne(u => u.User)
-            .WithMany(u => u.MovieUser)
-            .HasForeignKey(u => u.UserId);
+        modelBuilder.Entity<MovieCopy>()
+            .HasOne(c => c.User)
+            .WithMany(u => u.MovieCopies)
+            .HasForeignKey(c => c.UserId);
+           
     }
 
     // helpers to seed the db initially
@@ -38,10 +42,8 @@ internal sealed class MovieRentalDBContext : DbContext
         {
             moviesToSeed[i] = new Movie
             {
-                MovieId = i + 1,
                 MovieName = $"Example Movie {i} Title",
                 MovieSummary = $"Example Movie {i} Content",
-                MovieStock = 3,
             };
         }
         return moviesToSeed;
@@ -54,7 +56,6 @@ internal sealed class MovieRentalDBContext : DbContext
         {
             usersToSeed[i] = new User
             {
-                UserId = i + 1,
                 UserName = $"User {i} Name",
             };
         }

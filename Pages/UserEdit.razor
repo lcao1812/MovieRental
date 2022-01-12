@@ -1,15 +1,13 @@
-﻿@page "/edit/user/{UserId:int}"
+﻿@page "/edit/user/{UserId:guid}"
 
 
-<h1> Editing User @_userToEdit.UserName</h1>
+<h1> Editing Client: @_userToEdit.UserName</h1>
 
 <EditForm Model="_userToEdit" OnValidSubmit="EditUserAsync">
     <div class="form-group mb-3">
-        <label for="userName">Title</label>
+        <label for="userName">Client Name</label>
         <InputText class="form-control" id="userName" placeholder="Enter User Name" @bind-Value="_userToEdit.UserName"></InputText>
     </div>
-
-
     
     <DataAnnotationsValidator />
     <ValidationSummary />
@@ -25,16 +23,22 @@
         <thead>
             <tr>
                 <th>Name</th>
+                <th>Date Rent</th>
+                <th>Days In Possession</th>
+                <th>Balance</th>
                 <th>Action</th> 
             </tr>
         </thead>
         <tbody>
 
-            @foreach (var movie_user in _moviesRenting)
+            @foreach (var movieCopy in _moviesRenting)
             {
                 <tr>
-                    <td>@fetchMovieName(movie_user.MovieId)</td>
-                    <td><button class="btn btn-md btn-warning" @onclick="() => returnRental(movie_user)">Return</button></td>
+                    <td>@(GetMovie(movieCopy.MovieId).MovieName)</td>
+                    <td>@(movieCopy.DateRent == null ? "In Stock" : movieCopy.DateRent.ToString())</td>
+                    <td>@(movieCopy.DateRent == null ? "In Stock" : CalculateDaysInPossession(movieCopy))</td>
+                    <td>$@CalculateMovieBalance(movieCopy.MovieId)</td>
+                    <td><button class="btn btn-md btn-warning" @onclick="() => this.ReturnRental(movieCopy.CopyId)">Return</button></td>
                 </tr>
             }
         </tbody>
@@ -45,21 +49,23 @@
 @inject NavigationManager NavigationManager
 
 @code {
-    [Parameter] public int UserId { get; set; }
+    [Parameter] public Guid UserId { get; set; }
 
     private User _userToEdit = null;
-    private List<Movie_User> _moviesRenting = new List<Movie_User>();
-    private Movie movieRenting = null;
+    private List<MovieCopy> _moviesRenting = null;
+    private MovieCopy _copyRenting = null;
+    private int lateFee = 0;
 
     protected override async Task OnParametersSetAsync()
     {
         using var context = new MovieRentalDBContext();    
         _userToEdit = await context.Users.FindAsync(UserId);
-        _moviesRenting = await (
-            from movie_user in context.Movie_User
-            where (movie_user.UserId == UserId)
-            select movie_user
-        ).ToListAsync();
+
+        _moviesRenting = (
+            from movieCopy in context.MoviesCopy
+            where (movieCopy.UserId == UserId)
+            select movieCopy
+        ).ToList();
 
     }
 
@@ -70,7 +76,7 @@
 
         if (await context.SaveChangesAsync() > 0)
         {
-            NavigationManager.NavigateTo("/users");
+            this.navigateRoot();
         }
         else
         {
@@ -79,47 +85,78 @@
         }
     }
 
+    private async Task ReturnRental(Guid copyId)
+    {
+        using var context = new MovieRentalDBContext();
+        _copyRenting = await context.MoviesCopy.FindAsync(copyId);
+        _copyRenting.UserId = null;
+        _copyRenting.DateRent = null;
+
+        if (await context.SaveChangesAsync() > 0)
+        {   
+            // using a different context to update the _moviesRenting list to reflect correctly in the UI
+            using var context_1 = new MovieRentalDBContext();
+            _moviesRenting = (
+                from movieCopy in context_1.MoviesCopy
+                where (movieCopy.UserId == UserId)
+                select movieCopy
+            ).ToList();
+        }
+        else
+        {
+            string errorMessage = $"ERROR: Failed to return the copy \"{_userToEdit.UserName}\"";
+            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+
+    }
+
+    // Helper to get the movie information
+    private Movie GetMovie(Guid currentMovieId)
+    {
+        using var context = new MovieRentalDBContext();
+        Movie currentMovie = context.Movies.Find(currentMovieId);
+
+        return currentMovie;
+    }
+
+    // Helper to calculate days in possession
+    private int CalculateDaysInPossession(MovieCopy movieCopy)
+    {
+        DateTime dateRented = movieCopy.DateRent ?? DateTime.Now;
+
+        int daysInPossession = (DateTime.Now - dateRented).Days;
+        if (daysInPossession > 2)
+        {   // client can only have the movie for 2 days, anything more will be $3 a day.
+            lateFee += (daysInPossession - 2) * 3;
+        }
+
+        return daysInPossession;
+    }
+
+    private int CalculateMovieBalance(Guid movieId)
+    {
+        int basePrice = 0;
+        int discount = 0;
+
+        using var context = new MovieRentalDBContext();
+        int yearReleased = context.Movies.Find(movieId).MovieYear;
+        int daysRegistered = (DateTime.Now - context.Users.Find(UserId).JoinDate).Days;
+        basePrice = yearReleased >= 2000 ? 10 : 5;
+        discount = daysRegistered >= 365 ? 3 : 0;
+
+        int retVal = basePrice - discount + lateFee;
+        basePrice = 0;
+        discount = 0;
+        lateFee = 0;
+
+        return retVal;
+    }
+
     // Helper to navigate back to the root respective of the current page
     private void navigateRoot()
     {
         NavigationManager.NavigateTo("/users");
     }
 
-    // For some reason I could not retrieve the movie name from the join table
-    // therefore I had to use the movie id (foreign key) to retrieve it from the movie table
-    // input --> movieId: int
-    // outptu --> MovieName: string
-    private string fetchMovieName(int movieId)
-    {
-        using var context = new MovieRentalDBContext();
-        movieRenting = context.Movies.Find(movieId);
-        return movieRenting.MovieName;
-    }
 
-    // Helper to return the movie rental
-    // This function increases the movie stock, remove the entry from the joined table
-    // Lastly, it removes the entry from the list to display the movies, or display error message
-    // input: Movie_User --> join table entry
-    // output: void --> display the list or error message.
-    private async void returnRental(Movie_User movie_user)
-    {
-        // Grabbing the movie from the Movie table and increase the stock
-        using var context = new MovieRentalDBContext();
-        movieRenting = await context.Movies.FindAsync(movie_user.MovieId);
-        movieRenting.MovieStock += 1;
-
-        // Using a different context to avoid same key tracking error
-        using var context_1 = new MovieRentalDBContext();
-        context_1.Movie_User.Remove(movie_user);
-
-        if (await context.SaveChangesAsync() > 0 && await context_1.SaveChangesAsync() > 0)
-        {
-            _moviesRenting.Remove(movie_user);
-        }
-        else
-        {
-            string errorMessage = $"ERROR: Failed to return the movie \"{movieRenting.MovieName}\"";
-            await JSRuntime.InvokeVoidAsync("alert", errorMessage);
-        }
-    }
 }

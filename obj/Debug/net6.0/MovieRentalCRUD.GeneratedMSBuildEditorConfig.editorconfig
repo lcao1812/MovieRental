@@ -43,6 +43,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTW92aWVJbmRleC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/MovieStock.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTW92aWVTdG9jay5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/locdc/Documents/EAI/MovieRental/MovieRentalCRUDSln/MovieRentalCRUD/Pages/UserCreate.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlckNyZWF0ZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

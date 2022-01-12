@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieRentalCRUD.Data;
 
@@ -10,9 +11,10 @@ using MovieRentalCRUD.Data;
 namespace MovieRentalCRUD.Data.Migrations
 {
     [DbContext(typeof(MovieRentalDBContext))]
-    partial class MovieRentalDBContextModelSnapshot : ModelSnapshot
+    [Migration("20220111162459_AddedDateRent")]
+    partial class AddedDateRent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.1");
@@ -69,9 +71,6 @@ namespace MovieRentalCRUD.Data.Migrations
                 {
                     b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("JoinDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserName")
